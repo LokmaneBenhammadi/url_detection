@@ -1,0 +1,133 @@
+# ────────────────────────────────────────────────────────────────────────
+# Configuration for url_detection_project
+#
+# Consumed by the future src/ CLIs (train.py / evaluate.py / inference.py)
+# and mirrored by notebook 03. Keep defaults aligned with the notebook so
+# the two paths produce identical results.
+# ────────────────────────────────────────────────────────────────────────
+
+project:
+  name:         url_detection_project
+  module:       "Sécurité des Données"
+  random_seed:  42
+
+paths:
+  data:           data/All_clean.csv
+  ref_bestfirst:  data/All_BestFirst.csv
+  ref_infogain:   data/All_Infogain.csv
+  checkpoints:    checkpoints/
+  outputs:        notebooks/outputs/model_training/
+
+# ─── Preprocessing ──────────────────────────────────────────────────────
+preprocess:
+  target_col:       class
+  sentinel_value:   -1          # ISCX "field absent" marker
+  impute_strategy:  median
+  scaler:           standard    # StandardScaler
+  # Binary collapse: benign -> 0, everything else -> 1 (required by FPR).
+  negative_label:   benign
+  positive_label:   malicious
+
+split:
+  test_size:  0.20
+  stratify:   true
+
+# ─── Feature selection (winning subset from notebook 02) ────────────────
+features:
+  method:    mutual_information
+  k:         12
+  selected:
+    - Entropy_Domain
+    - argDomanRatio
+    - NumberRate_FileName
+    - CharacterContinuityRate
+    - argPathRatio
+    - ArgUrlRatio
+    - pathurlRatio
+    - domainUrlRatio
+    - domainlength
+    - NumberRate_AfterPath
+    - NumberofDotsinURL
+    - domain_token_count
+
+# ─── Classical ML (notebook 03 §5) ──────────────────────────────────────
+training:
+  cv_folds:       5
+  cv_scoring:     accuracy
+  models:
+    logistic_regression:  { max_iter: 1000 }
+    naive_bayes:          {}
+    knn:                  { n_neighbors: 5 }
+    decision_tree:        {}
+    random_forest:        { n_estimators: 100 }
+    xgboost:              { n_estimators: 200, max_depth: 6, learning_rate: 0.1 }
+    adaboost:             { n_estimators: 100 }
+    svm:                  { kernel: rbf, C: 1.0, probability: true }
+
+# ─── Deep Learning (notebook 03 §6) ─────────────────────────────────────
+deep_learning:
+  mlp:                      # sklearn MLPClassifier
+    hidden_layer_sizes: [64]
+    activation:          relu
+    solver:              adam
+    max_iter:            300
+    early_stopping:      true
+
+  dnn:                      # base Keras DNN
+    hidden_layers:    [128, 64, 32]
+    dropout:          0.3
+    batch_norm:       true
+    batch_size:       128
+    epochs:           100
+    learning_rate:    0.001
+    early_stopping_patience: 10
+
+  improved_dnn:             # L2 + He init + scheduler + class weights
+    hidden_layers:    [256, 128, 64, 32]
+    dropout:          [0.4, 0.4, 0.3, 0.2]
+    l2:               0.0001
+    kernel_initializer: he_normal
+    batch_norm:       true
+    batch_size:       128
+    epochs:           150
+    learning_rate:    0.001
+    class_weight:     balanced
+    early_stopping_patience: 15
+    lr_scheduler:
+      monitor:   val_loss
+      factor:    0.5
+      patience:  5
+      min_lr:    0.000001
+
+# ─── Hyperparameter tuning (notebook 03 §7) ─────────────────────────────
+hyperparameter_tuning:
+  random_forest_grid:
+    n_estimators: [100, 200, 400]
+    max_depth:    [null, 10, 20]
+    cv_folds:     3
+
+  pso_xgboost:
+    n_particles:  8
+    n_iters:      6
+    inertia_w:    0.7
+    cognitive_c1: 1.5
+    social_c2:    1.5
+    cv_folds:     3
+    bounds:
+      learning_rate: [0.01, 0.30]
+      max_depth:     [3,    10]
+
+# ─── Evaluation — course-imposed ranking rule ───────────────────────────
+evaluation:
+  # "Accuracy ↑, FPR ↓" lexicographic ordering.
+  metrics:        [Accuracy, Precision, Recall, F1, ROC_AUC, FPR]
+  sort_by:        [Accuracy, FPR]
+  sort_ascending: [false, true]
+
+# ─── API serving (consumed by api/main.py once wired up) ────────────────
+api:
+  host:         0.0.0.0
+  port:         8000
+  cors_origins: ["*"]
+  checkpoint:   checkpoints/best_model.joblib
+  threshold:    0.5          # probability cut-off for benign / malicious
