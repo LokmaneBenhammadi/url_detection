@@ -30,20 +30,29 @@ class URLPredictRequest(BaseModel):
         description="Raw URL to classify.",
         examples=["http://example.com/login?id=42"],
     )
+    mode: Literal["binary", "multiclass"] = Field(
+        "binary",
+        description="Prediction mode: binary (benign/malicious) or multiclass.",
+    )
 
 
 class URLPredictResponse(BaseModel):
     """Response returned by ``POST /predict``."""
 
     url:           str
-    label:         Literal["benign", "malicious"]
+    mode:          Literal["binary", "multiclass"]
+    label:         str
     probability:   float = Field(
         ..., ge=0.0, le=1.0,
-        description="Probability the URL belongs to the 'malicious' class.",
+        description="Probability of the predicted label.",
     )
     model_name:    str = Field(
         ..., description="Identifier of the checkpoint used for inference.",
     )
     features_used: int = Field(
         ..., description="Number of features extracted (expected: 12).",
+    )
+    probabilities: dict[str, float] | None = Field(
+        None,
+        description="Optional probability distribution for all supported classes.",
     )

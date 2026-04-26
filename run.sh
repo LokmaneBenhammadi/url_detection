@@ -8,6 +8,9 @@ set -e
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Add home bin to PATH if not already there
+export PATH="$HOME/bin:$PATH"
+
 # Change to the project directory
 cd "$SCRIPT_DIR"
 

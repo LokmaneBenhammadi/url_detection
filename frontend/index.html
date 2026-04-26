@@ -110,6 +110,10 @@
       <label for="urlInput">Enter a URL to classify</label>
       <input id="urlInput" type="text" placeholder="http://example.com/login?id=42" />
       <div class="row">
+        <select id="modeSelect">
+          <option value="binary">Binary (Benign/Malicious)</option>
+          <option value="multiclass">Multiclass (All Types)</option>
+        </select>
         <button id="predictBtn">Predict</button>
         <button id="sampleBtn" class="secondary">Use Sample</button>
       </div>
@@ -123,6 +127,7 @@
     const resultBox = document.getElementById('resultBox');
     const predictBtn = document.getElementById('predictBtn');
     const sampleBtn = document.getElementById('sampleBtn');
+    const modeSelect = document.getElementById('modeSelect');
 
     async function checkHealth() {
       try {
@@ -140,6 +145,7 @@
 
     async function predict() {
       const url = urlInput.value.trim();
+      const mode = modeSelect.value;
       if (!url) {
         resultBox.textContent = 'Please enter a URL first.';
         return;
@@ -150,7 +156,7 @@
         const r = await fetch('/predict', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
+          body: JSON.stringify({ url, mode })
         });
         const data = await r.json();
         if (!r.ok) {
@@ -158,14 +164,22 @@
           return;
         }
 
-        const cls = data.label === 'malicious' ? 'bad' : 'ok';
-        const badgeText = data.label.toUpperCase();
-        resultBox.innerHTML =
-          `URL: ${data.url}\n` +
-          `Prediction: ${data.label} <span class="badge ${cls}">${badgeText}</span>\n` +
-          `Probability: ${(data.probability * 100).toFixed(2)}%\n` +
-          `Model: ${data.model_name}\n` +
-          `Features used: ${data.features_used}`;
+        let cls, badgeText;
+        if (mode === 'binary') {
+          cls = data.label === 'malicious' ? 'bad' : 'ok';
+          badgeText = data.label.toUpperCase();
+        } else {
+          cls = data.label === 'benign' ? 'ok' : 'bad';
+          badgeText = data.label.toUpperCase();
+        }
+        let resultText = `URL: ${data.url}\nMode: ${data.mode}\nPrediction: ${data.label} <span class="badge ${cls}">${badgeText}</span>\nProbability: ${(data.probability * 100).toFixed(2)}%\nModel: ${data.model_name}\nFeatures used: ${data.features_used}`;
+        if (data.probabilities) {
+          resultText += '\n\nProbabilities:';
+          for (const [label, prob] of Object.entries(data.probabilities)) {
+            resultText += `\n  ${label}: ${(prob * 100).toFixed(2)}%`;
+          }
+        }
+        resultBox.innerHTML = resultText;
       } catch (e) {
         resultBox.textContent = `Request failed: ${e}`;
       }
