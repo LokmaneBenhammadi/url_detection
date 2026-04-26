@@ -209,23 +209,59 @@ python -m src.train --config configs/config.yaml
 python -m src.inference --config configs/config.yaml --url "http://example.com/login?id=42"
 ```
 
-## 10) How to Run the API (Placeholder)
+## 10) How to Run the API
+
+### Quick Start (Automated)
+
+Run the included startup script:
 
 ```bash
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+bash run.sh
 ```
 
-### GET /health
+This will start the FastAPI server at `http://127.0.0.1:8000` and open the web UI in your browser.
+
+### Manual Start
+
+1. Navigate to the project directory:
+```bash
+cd /home/youcef/Desktop/url_detection
+```
+
+2. Start the FastAPI server using the url_detection micromamba environment:
+```bash
+micromamba run -n url_detection python -m uvicorn api.main:app --host 127.0.0.1 --port 8000
+```
+
+3. Open your browser and navigate to:
+```
+http://127.0.0.1:8000/app
+```
+
+You'll see the URL classification UI. Enter a URL and click "Predict" to classify it as benign or malicious.
+
+### API Endpoints
+
+#### GET /health
+
+Check model loading status:
 
 ```bash
 curl -X GET http://127.0.0.1:8000/health
 ```
 
 ```json
-{ "status": "ok" }
+{
+  "status": "ok",
+  "model_loaded": true,
+  "model_name": "XGBoost_PSO",
+  "n_features": 12
+}
 ```
 
-### POST /predict
+#### POST /predict
+
+Classify a URL:
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/predict" \
@@ -233,16 +269,21 @@ curl -X POST "http://127.0.0.1:8000/predict" \
   -d '{"url": "http://example.com/login?id=42"}'
 ```
 
-Expected response shape (once implemented):
+Response:
 
 ```json
 {
   "url": "http://example.com/login?id=42",
-  "prediction": "malicious",
-  "probability": 0.87,
-  "features_used": 12
+  "label": "malicious",
+  "probability": 0.9995,
+  "model_name": "XGBoost_PSO",
+  "n_features": 12
 }
 ```
+
+#### GET /app
+
+Access the web UI for interactive predictions (served by the FastAPI backend).
 
 ## 11) Tech Stack
 
