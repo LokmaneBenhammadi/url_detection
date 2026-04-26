@@ -10,16 +10,16 @@
 
 | Métrique  | Valeur |
 |-----------|--------|
-| Accuracy  | 0.9848 |
-| Precision | 0.9905 |
-| Recall    | 0.9885 |
-| F1-score  | 0.9895 |
-| ROC-AUC   | 0.9982 |
-| **FPR**   | **0.0248** |
+| Accuracy  | 0.9905 |
+| Precision | 0.9940 |
+| Recall    | 0.9940 |
+| F1-score  | 0.9940 |
+| ROC-AUC   | 0.9990 |
+| **FPR**   | **0.0225** |
 
 ## Second
 
-`XGBoost` — Accuracy 0.9833, FPR 0.0221.
+`RF_GridSearch` — Accuracy 0.9888, FPR 0.0257.
 
 ## Lecture
 
