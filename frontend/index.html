@@ -64,7 +64,28 @@
       outline: none;
     }
     input[type="text"]:focus { border-color: var(--accent); }
-    .row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 10px 38px 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background-color: #0b1220;
+      color: var(--text);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      transition: border-color 0.15s ease;
+    }
+    select:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+    select:focus { border-color: var(--accent); }
+    select option { background: var(--card); color: var(--text); }
+    .row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
     button {
       border: none;
       border-radius: 10px;
